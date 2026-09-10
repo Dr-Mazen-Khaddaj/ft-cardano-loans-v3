@@ -363,13 +363,35 @@ fn get_loan_sellable_value(
   totalInstallments: Int,
   repaymentMode: RepaymentMode,
 ) {
-  let principalInEachInstallment = principalAmount / totalInstallments
-  let valueExceptInPerpetualLoans =
-    principalAmount - principalInEachInstallment * repaidInstallments
-
   when repaymentMode is {
-    InterestOnRemainingPrincipal { .. } -> valueExceptInPerpetualLoans
-    PrincipalAndInterestOnInstallments -> valueExceptInPerpetualLoans
+    InterestOnRemainingPrincipal { .. } -> {
+      expect Some(principalInEachInstallment) =
+        rational.new(principalAmount, totalInstallments)
+      expect Some(principalAmountAsRational) = rational.new(principalAmount, 1)
+      rational.round(
+        rational.sub(
+          principalAmountAsRational,
+          rational.mul(
+            principalInEachInstallment,
+            rational.from_int(repaidInstallments),
+          ),
+        ),
+      )
+    }
+    PrincipalAndInterestOnInstallments -> {
+      expect Some(principalInEachInstallment) =
+        rational.new(principalAmount, totalInstallments)
+      expect Some(principalAmountAsRational) = rational.new(principalAmount, 1)
+      rational.round(
+        rational.sub(
+          principalAmountAsRational,
+          rational.mul(
+            principalInEachInstallment,
+            rational.from_int(repaidInstallments),
+          ),
+        ),
+      )
+    }
     PerpetualLoan { .. } -> principalAmount
   }
 }
