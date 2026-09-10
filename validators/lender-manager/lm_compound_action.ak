@@ -129,6 +129,8 @@ validator actionValidator(
               repaymentPolicyId,
             )
 
+          //Ensure that we are taking a utxo with actual principal in it
+          expect assetAmount > 0
           expect
             if principalAsset.policyId == ada_policy_id {
               // 1. If principal asset is ADA, ensure no other tokens are present, except eventual receipt NFT

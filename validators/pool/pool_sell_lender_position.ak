@@ -14,7 +14,10 @@ use fluidtokens/finance.{
   get_needed_collateral_with_oracles, get_needed_collateral_without_oracles,
 }
 use fluidtokens/oracle.{retrieve_oracle_data}
-use fluidtokens/types/general.{PerpetualLoan}
+use fluidtokens/types/general.{
+  InterestOnRemainingPrincipal, PerpetualLoan,
+  PrincipalAndInterestOnInstallments, RepaymentMode,
+}
 use fluidtokens/types/loan.{LoanDatum} as l
 use fluidtokens/types/pool.{
   PoolDatum, PoolSellLenderPositionActionWithdrawRedeemer, SellingLenderBondInfo,
@@ -102,7 +105,13 @@ validator pool_sell_lender_position_action(
               expect InlineDatum(outputWithLenderTokenDatum) =
                 outputWithLenderToken.datum
               //The value of the loan is the current borrowed principal
-              let loanValueInPrincipal = loanDatum.principalAmount
+              let loanValueInPrincipal =
+                get_loan_sellable_value(
+                  loanDatum.principalAmount,
+                  loanDatum.repaidInstallments,
+                  loanDatum.totalInstallments,
+                  loanDatum.repaymentMode,
+                )
 
               expect and {
                   //Lender bond input must have the lender bond
@@ -345,5 +354,22 @@ fn is_loan_compatible_with_pool(
     poolCollateral == loanDatum.collateral,
     //To have the correct LTV, the collateral in the loan must be >= than the one required by the pool
     loanCollateralAmount >= neededCollateral,
+  }
+}
+
+fn get_loan_sellable_value(
+  principalAmount: Int,
+  repaidInstallments: Int,
+  totalInstallments: Int,
+  repaymentMode: RepaymentMode,
+) {
+  let principalInEachInstallment = principalAmount / totalInstallments
+  let valueExceptInPerpetualLoans =
+    principalAmount - principalInEachInstallment * repaidInstallments
+
+  when repaymentMode is {
+    InterestOnRemainingPrincipal { .. } -> valueExceptInPerpetualLoans
+    PrincipalAndInterestOnInstallments -> valueExceptInPerpetualLoans
+    PerpetualLoan { .. } -> principalAmount
   }
 }
