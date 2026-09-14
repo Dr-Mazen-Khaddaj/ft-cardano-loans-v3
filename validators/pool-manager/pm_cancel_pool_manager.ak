@@ -30,8 +30,8 @@ validator poolManager(
         configNFTAssetName,
       )
     let poolManagerSpendScriptHash =
-      builtin.un_b_data(utils.safe_list_at(config, 26))
-    let poolManagerPolicyId = builtin.un_b_data(utils.safe_list_at(config, 27))
+      builtin.un_b_data(utils.safe_list_at(config, 27))
+    let poolManagerPolicyId = builtin.un_b_data(utils.safe_list_at(config, 28))
 
     let poolManagerInputs =
       list.filter(

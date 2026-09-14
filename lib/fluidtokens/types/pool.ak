@@ -83,6 +83,8 @@ pub type Action {
   SellLenderPosition
   //Bots can compound to the pool
   Compound
+  //Correct way to edit a pool, without burning the pool nft (compound compatible)
+  Edit
 }
 
 pub type PoolWithdrawRedeemer {
@@ -149,4 +151,13 @@ pub type PoolSellLenderPositionActionWithdrawRedeemer {
 pub type PoolCompoundActionWithdrawRedeemer {
   configRefInputIndex: Int,
   actionsForEachInput: List<CompoundData>,
+}
+
+pub type EditData {
+  poolId: ByteArray,
+}
+
+pub type EditActionWithdrawRedeemer {
+  configRefInputIndex: Int,
+  actionsForEachInput: List<EditData>,
 }
