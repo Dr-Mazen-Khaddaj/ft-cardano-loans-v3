@@ -9,7 +9,7 @@ use smart_tokens/utils.{
   get_inputs_from_smart_credential, get_outputs_to_smart_credential,
 } as st_utils
 
-validator pool_update_action(
+validator pool_edit_action(
   configNFTPolicyId: ByteArray,
   configNFTAssetName: ByteArray,
 ) {

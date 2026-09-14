@@ -19,6 +19,8 @@ pub type PoolManagerAction {
   UpdatePoolManager
   //Delegates the security to one of the compounding actions from LenderManager
   CompoundLiquidity
+  //Allows the pool owner to edit the pool without burning the nft
+  EditPool
 }
 
 pub type PoolManagerWithdrawRedeemer {

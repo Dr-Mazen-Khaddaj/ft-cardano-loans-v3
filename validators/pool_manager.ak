@@ -6,7 +6,7 @@ use cardano/assets.{PolicyId, tokens}
 use cardano/transaction.{InlineDatum, Output, Transaction, Withdraw}
 use fluidtokens/types/pool.{Cancel, PoolWithdrawRedeemer} as pw
 use fluidtokens/types/pool_manager.{
-  CancelPoolManager, CompoundLiquidity, PoolManagerDatum,
+  CancelPoolManager, CompoundLiquidity, EditPool, PoolManagerDatum,
   PoolManagerMintRedeemer, PoolManagerWithdrawRedeemer, UpdatePoolManager,
 }
 use fluidtokens/utils.{safe_list_at}
@@ -20,6 +20,7 @@ validator poolManager(
   poolManagerCancelPoolManagerScriptHash: ByteArray,
   poolManagerUpdatePoolManagerScriptHash: ByteArray,
   poolManagerCompoundLiquidityScriptHash: ByteArray,
+  poolManagerEditPoolScriptHash: ByteArray,
 ) {
   mint(
     redeemer: PoolManagerMintRedeemer,
@@ -47,6 +48,7 @@ validator poolManager(
         CancelPoolManager { .. } -> poolManagerCancelPoolManagerScriptHash
         UpdatePoolManager { .. } -> poolManagerUpdatePoolManagerScriptHash
         CompoundLiquidity { .. } -> poolManagerCompoundLiquidityScriptHash
+        EditPool { .. } -> poolManagerEditPoolScriptHash
       }
 
     list.any(
