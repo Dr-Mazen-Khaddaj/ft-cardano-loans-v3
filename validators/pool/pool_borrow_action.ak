@@ -15,8 +15,8 @@ use fluidtokens/finance.{
 }
 use fluidtokens/oracle.{retrieve_oracle_data}
 use fluidtokens/types/general.{
-  Asset, CardanoSignature, CardanoSpendScript, CollateralAsset,
-  InterestOnRemainingPrincipal, Liquidation, PerpetualLoan,
+  Asset, CardanoSignature, CardanoSpendScript, CollateralAsset, Liquidation,
+  PerpetualLoan,
 }
 use fluidtokens/types/loan.{LoanDatum}
 use fluidtokens/types/locked_borrower_manager.{LockedBorrowerManagerDatum}
