@@ -22,7 +22,7 @@ use fluidtokens/finance.{
 use fluidtokens/oracle.{retrieve_oracle_data}
 use fluidtokens/types/general.{
   Asset, AuthorizationMethod, CardanoSignature, CardanoSpendScript,
-  CollateralAsset, Liquidation, PerpetualLoan,
+  CollateralAsset, InterestOnRemainingPrincipal, Liquidation, PerpetualLoan,
 }
 use fluidtokens/types/loan.{LoanDatum}
 use fluidtokens/types/locked_borrower_manager.{LockedBorrowerManagerDatum}
@@ -544,8 +544,15 @@ fn validate_output_to_loan(
       PerpetualLoan { .. } -> True
       _ -> newDatum.totalInstallments > 0
     }
+  //interestRate == 0 makes the amortization formula's (1+ip)^n - 1 denominator
+  //collapse to zero, so InterestOnRemainingPrincipal loans can never have a zero rate
+  let isInterestRateValid =
+    when newDatum.repaymentMode is {
+      InterestOnRemainingPrincipal { .. } -> newDatum.interestRate != 0
+      _ -> True
+    }
   let isDatumCorrect =
-    builtin.equals_data(outputDatum, newDatum) && isLiquidationCorrectlySet && isInstallmentCountValid
+    builtin.equals_data(outputDatum, newDatum) && isLiquidationCorrectlySet && isInstallmentCountValid && isInterestRateValid
 
   let correctDestination =
     if is_output_to_spend_validator(output, loanSpendScriptHash) {
