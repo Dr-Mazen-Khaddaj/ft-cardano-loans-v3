@@ -1,7 +1,6 @@
 use aiken/builtin
 use aiken/collection/list.{length}
 use aiken/interval.{Finite, Interval}
-use aiken/math.{pow}
 use aiken/math/rational
 use cardano/address.{Address, Credential, Script}
 use cardano/assets.{ada_policy_id, flatten, quantity_of}
@@ -120,18 +119,37 @@ validator loan_recast_action(
                   datum.penaltyFeeForLateRepayment,
                 )
 
-              let interestPerInstallment =
-                datum.interestRate / datum.totalInstallments
+              expect Some(interestPerInstallmentAsRational) =
+                rational.div(
+                  interestRateAsRational,
+                  rational.from_int(datum.totalInstallments),
+                )
 
-              let r = 1 + interestPerInstallment
+              let r =
+                rational.add(
+                  rational.from_int(1),
+                  interestPerInstallmentAsRational,
+                )
 
               let remainingPrincipalToPay =
-                if r > 0 {
-                  let rToTheT = pow(r, datum.repaidInstallments)
+                if rational.compare(r, rational.from_int(0)) == Greater {
+                  expect Some(rToTheT) = rational.pow(r, datum.repaidInstallments)
 
-                  datum.principalAmount * rToTheT - a * ( rToTheT - 1 ) / (
-                    r - 1
-                  )
+                  let numerator =
+                    rational.sub(
+                      rational.mul(
+                        rational.from_int(datum.principalAmount),
+                        rToTheT,
+                      ),
+                      rational.mul(
+                        rational.from_int(a),
+                        rational.sub(rToTheT, rational.from_int(1)),
+                      ),
+                    )
+                  let denominator = rational.sub(r, rational.from_int(1))
+                  expect Some(result) = rational.div(numerator, denominator)
+
+                  rational.ceil(result)
                 } else {
                   datum.principalAmount - datum.repaidInstallments * a
                 }
