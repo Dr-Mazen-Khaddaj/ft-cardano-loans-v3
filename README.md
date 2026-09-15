@@ -64,7 +64,8 @@ Bots compete to execute these transactions and earn liquidation and compounding 
     5) For automatic compounding, the field poolId must be set as the NFT AssetName of the newly created PoolManager, otherwise leave it empty.
 * When a new loan is created, the Lender's bond will now get locked in LenderManager Spend script.
 * Each borrower repayment (installment, full amount, recast) will be sent to the LenderManager Spend script.
-* To cancel/edit a pool, the Lender now has to also burn the corresponding PoolManager.
+* To cancel a pool, the Lender now has to also burn the corresponding PoolManager.
+* To edit a pool, the Lender now has to call the corresponding action in PoolManager.
 * The Lender can edit the PoolManager datum to change ownership of the lender bond or to change the compounding fee.
 * If shouldLiquidationConvertToPrincipal is False, bots can only liquidate the loans collateral. The result is placed in the LenderManager Spend script.
 * If shouldLiquidationConvertToPrincipal is True, bots must liquidate and convert the collateral to principal. They can do either by placing an order on the DEX (if the calculated slippage is within acceptable limits) or by anticipating the principal to the Lender and keeping the collateral. The result is placed in the LenderManager Spend script.
