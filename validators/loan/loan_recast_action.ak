@@ -133,22 +133,24 @@ validator loan_recast_action(
 
               let remainingPrincipalToPay =
                 if rational.compare(r, rational.from_int(0)) == Greater {
-                  expect Some(rToTheT) = rational.pow(r, datum.repaidInstallments)
+                  expect Some(rToTheT) =
+                    rational.pow(r, datum.repaidInstallments)
 
-                  let numerator =
+                  let denominator = rational.sub(r, rational.from_int(1))
+                  let aTerm =
+                    rational.mul(
+                      rational.from_int(a),
+                      rational.sub(rToTheT, rational.from_int(1)),
+                    )
+                  expect Some(aTermDivided) = rational.div(aTerm, denominator)
+                  let result =
                     rational.sub(
                       rational.mul(
                         rational.from_int(datum.principalAmount),
                         rToTheT,
                       ),
-                      rational.mul(
-                        rational.from_int(a),
-                        rational.sub(rToTheT, rational.from_int(1)),
-                      ),
+                      aTermDivided,
                     )
-                  let denominator = rational.sub(r, rational.from_int(1))
-                  expect Some(result) = rational.div(numerator, denominator)
-
                   rational.ceil(result)
                 } else {
                   datum.principalAmount - datum.repaidInstallments * a
