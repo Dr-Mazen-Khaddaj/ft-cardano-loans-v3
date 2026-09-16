@@ -40,6 +40,7 @@ The following features are supported:
 * Automatic liquidations and compounding (see next section)
 * Lenders can sell their positions to compatible pools to receive the liquidity back when needed
 * Borrowers can be locked so they cannot transfer their loan position to anyone else
+* Zero-interest loans are NOT supported
 
 ## Lending and borrowing
 * Pools, requests and loans are all identified by unique NFTs.
