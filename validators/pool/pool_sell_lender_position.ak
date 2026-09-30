@@ -190,7 +190,7 @@ validator pool_sell_lender_position_action(
         let principalPaid = principalAmount - principalAmountAfterSelling
 
         let noLenderManager =
-          list.any(
+          !list.any(
             self.withdrawals,
             fn(withdrawal) {
               when withdrawal is {
