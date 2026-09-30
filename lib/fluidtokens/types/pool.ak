@@ -31,7 +31,7 @@ pub type CommonData {
   //Period to repay without being considered late, expressed in hours
   //After this period, borrower can be liquidated if he hasn't paid the installment
   repaymentTimeWindow: Int,
-  //Fee borrower pays when he could be liquidated but he repays, <= 0 means no penalty
+  //Fee borrower pays when he could be liquidated but he repays, == 0 means no penalty. DO NOT put it negative!
   penaltyFeeForLateRepayment: Int,
   //If true, each payment for claim, recast and repay must be accompanied by a minted repayment receipt NFT
   repaymentReceipts: Bool,
