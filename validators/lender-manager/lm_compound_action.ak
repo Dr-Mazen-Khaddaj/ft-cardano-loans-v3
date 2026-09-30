@@ -41,7 +41,10 @@ validator actionValidator(
       builtin.un_b_data(utils.safe_list_at(config, 0))
     let poolSpendScriptHash = builtin.un_b_data(utils.safe_list_at(config, 8))
     let poolPolicyId = builtin.un_b_data(utils.safe_list_at(config, 2))
+    let loanSpendScriptHash = builtin.un_b_data(utils.safe_list_at(config, 10))
+    let loanPolicyId = builtin.un_b_data(utils.safe_list_at(config, 6))
     let repaymentPolicyId = builtin.un_b_data(utils.safe_list_at(config, 7))
+    let loanWithdrawScriptHash = loanPolicyId
     let lenderBondInputs =
       get_inputs_from_smart_credential(
         self.inputs,
@@ -96,6 +99,13 @@ validator actionValidator(
         self.outputs,
         Script(poolSpendScriptHash),
         Script(poolPolicyId),
+        smartTokensSpendScriptHash,
+      )
+    let loanInputs =
+      get_inputs_from_smart_credential(
+        self.inputs,
+        Script(loanSpendScriptHash),
+        Script(loanWithdrawScriptHash),
         smartTokensSpendScriptHash,
       )
 
@@ -241,6 +251,8 @@ validator actionValidator(
       list.length(poolManagerInputs) == list.length(
         dict.to_pairs(totalAssetsToCompoundForEachPoolManager),
       ),
+      //No loan must be spent during compound, otherwise attacker can claim collateral!
+      list.length(loanInputs) == 0,
       //No additional pools spent
       list.length(poolManagerInputs) == list.length(poolInputs),
       //All compounded pools are correct

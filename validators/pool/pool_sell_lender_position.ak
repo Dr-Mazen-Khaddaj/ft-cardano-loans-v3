@@ -28,6 +28,7 @@ use smart_tokens/utils.{get_inputs_from_smart_credential} as st_utils
 validator pool_sell_lender_position_action(
   configNFTPolicyId: ByteArray,
   configNFTAssetName: ByteArray,
+  lenderManagerWithdrawScriptHash: ByteArray,
 ) {
   withdraw(
     redeemer: PoolSellLenderPositionActionWithdrawRedeemer,
@@ -157,7 +158,7 @@ validator pool_sell_lender_position_action(
                     lenderBondAssetName,
                   ) == 1,
                   //Avoid dossing the bond output
-                  length(flatten(outputWithLenderToken.value)) <= 5,
+                  length(flatten(outputWithLenderToken.value)) == 2,
                 }
 
               (
@@ -188,7 +189,21 @@ validator pool_sell_lender_position_action(
           )
         let principalPaid = principalAmount - principalAmountAfterSelling
 
+        let noLenderManager =
+          list.any(
+            self.withdrawals,
+            fn(withdrawal) {
+              when withdrawal is {
+                Pair(Script(scriptHash), _amnt) ->
+                  scriptHash == lenderManagerWithdrawScriptHash
+                _ -> False
+              }
+            },
+          )
+
         and {
+          //Attacks could use LM bonds permission to sell a bond already owned by the pool owner
+          noLenderManager,
           //This prevents a broken pool to extract the pool nft
           poolPolicyId != poolDatum.commonData.principalAsset.policyId,
           quantity_of(

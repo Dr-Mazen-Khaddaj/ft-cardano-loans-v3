@@ -1,12 +1,15 @@
 use aiken/builtin
 use aiken/collection/list.{length}
+use aiken/collection/pairs
 use aiken/interval.{Finite, Interval}
 use aiken/math.{max}
 use aiken/math/rational
-use cardano/address.{Address, Credential, Inline, Script}
+use cardano/address.{
+  Address, Credential, Inline, PaymentCredential, Script, VerificationKey,
+}
 use cardano/assets.{AssetName, ada_policy_id, flatten, quantity_of}
 use cardano/transaction.{
-  InlineDatum, Input, Output, OutputReference, Transaction,
+  InlineDatum, Input, Output, OutputReference, Transaction, Withdraw,
 }
 use fluidtokens/constants
 use fluidtokens/finance.{
@@ -21,6 +24,11 @@ use fluidtokens/types/general.{
   NoLiquidationDutchAuctionClaim, NoLiquidationFullCollateralClaim,
   PerpetualLoan,
 }
+use fluidtokens/types/lender_manager.{
+  LenderManagerWithdrawRedeemer, Liquidate, LiquidateAndConvert,
+  LiquidateAndPayInAdvance, LiquidateConvertAndCompound,
+  LiquidatePayInAdvanceAndCompound,
+}
 use fluidtokens/types/loan.{LoanClaimActionWithdrawRedeemer, LoanDatum} as l
 use fluidtokens/utils.{is_nft_in_output, quantity_of_policy_id, safe_list_at}
 use smart_tokens/utils.{
@@ -33,6 +41,8 @@ validator loan_claim_action(
   configNFTAssetName: ByteArray,
   assetManagerSpendScriptHash: ByteArray,
   assetManagerWithdrawScriptHash: ByteArray,
+  lenderManagerSpendScriptHash: ByteArray,
+  lenderManagerPaymentCredential: PaymentCredential,
 ) {
   withdraw(
     redeemer: LoanClaimActionWithdrawRedeemer,
@@ -88,6 +98,17 @@ validator loan_claim_action(
             self.validity_range.lower_bound.bound_type,
             self.validity_range.upper_bound.bound_type,
           )
+        expect Some(lenderBondInput) =
+          list.find(
+            self.inputs,
+            fn(input) {
+              quantity_of(
+                input.output.value,
+                lenderBondPolicyId,
+                inputAction.loanId,
+              ) == 1
+            },
+          )
         let lenderBondOutput =
           utils.safe_list_at(self.outputs, inputAction.lenderBondOutputIndex)
 
@@ -106,6 +127,30 @@ validator loan_claim_action(
             datum.installmentPeriod,
             datum.repaymentTimeWindow,
           )
+        expect Some(lenderManagerWithdrawRedeemer) =
+          pairs.get_first(
+            self.redeemers,
+            Withdraw(lenderManagerPaymentCredential),
+          )
+        expect parsedLenderManagerWithdrawRedeemer: LenderManagerWithdrawRedeemer =
+          lenderManagerWithdrawRedeemer
+        let lenderManagerCorrectActionOrExternallyOwned =
+          when lenderBondInput.output.address.payment_credential is {
+            VerificationKey(_) -> True
+            Script(hash) ->
+              if hash == lenderManagerSpendScriptHash {
+                when parsedLenderManagerWithdrawRedeemer.action is {
+                  Liquidate -> True
+                  LiquidateAndPayInAdvance -> True
+                  LiquidateAndConvert -> True
+                  LiquidatePayInAdvanceAndCompound -> True
+                  LiquidateConvertAndCompound -> True
+                  _ -> False
+                }
+              } else {
+                True
+              }
+          }
         and {
           inputAction.liquidationMode == datum.liquidationMode,
           quantity_of(input.output.value, loanPolicyId, inputAction.loanId) == 1,
@@ -115,6 +160,8 @@ validator loan_claim_action(
             inputAction.loanId,
             lenderBondOutput,
           ),
+          //Only LM liquidations actions can be called with this or the lender bond must be outside
+          lenderManagerCorrectActionOrExternallyOwned,
           when datum.liquidationMode is {
             NoLiquidationFullCollateralClaim -> isRepaymentLate
             NoLiquidationDutchAuctionClaim -> {
