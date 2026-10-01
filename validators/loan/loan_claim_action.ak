@@ -127,16 +127,17 @@ validator loan_claim_action(
             datum.installmentPeriod,
             datum.repaymentTimeWindow,
           )
-        expect Some(lenderManagerWithdrawRedeemer) =
-          pairs.get_first(
-            self.redeemers,
-            Withdraw(lenderManagerPaymentCredential),
-          )
+
         let lenderManagerCorrectActionOrExternallyOwned =
           when lenderBondInput.output.address.payment_credential is {
             VerificationKey(_) -> True
             Script(hash) ->
               if hash == lenderManagerSpendScriptHash {
+                expect Some(lenderManagerWithdrawRedeemer) =
+                  pairs.get_first(
+                    self.redeemers,
+                    Withdraw(lenderManagerPaymentCredential),
+                  )
                 expect parsedLenderManagerWithdrawRedeemer: LenderManagerWithdrawRedeemer =
                   lenderManagerWithdrawRedeemer
                 when parsedLenderManagerWithdrawRedeemer.action is {
