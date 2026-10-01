@@ -114,7 +114,12 @@ validator pool_sell_lender_position_action(
                   loanDatum.repaymentMode,
                 )
 
+              let differentLenderBondAddressOrDatumHash =
+                !(lenderBondInput.output.address == outputWithLenderToken.address && lenderBondInput.output.datum == outputWithLenderToken.datum)
+
               expect and {
+                  //To avoid selling bonds already owner by the pool owner
+                  differentLenderBondAddressOrDatumHash,
                   //Lender bond input must have the lender bond
                   quantity_of(
                     lenderBondInput.output.value,
