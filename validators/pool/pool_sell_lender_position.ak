@@ -118,7 +118,7 @@ validator pool_sell_lender_position_action(
                 !(lenderBondInput.output.address == outputWithLenderToken.address && lenderBondInput.output.datum == outputWithLenderToken.datum)
 
               expect and {
-                  //To avoid selling bonds already owner by the pool owner
+                  //To avoid selling bonds already owned by the pool owner
                   differentLenderBondAddressOrDatumHash,
                   //Lender bond input must have the lender bond
                   quantity_of(
@@ -194,21 +194,7 @@ validator pool_sell_lender_position_action(
           )
         let principalPaid = principalAmount - principalAmountAfterSelling
 
-        let noLenderManager =
-          !list.any(
-            self.withdrawals,
-            fn(withdrawal) {
-              when withdrawal is {
-                Pair(Script(scriptHash), _amnt) ->
-                  scriptHash == lenderManagerWithdrawScriptHash
-                _ -> False
-              }
-            },
-          )
-
         and {
-          //Attacks could use LM bonds permission to sell a bond already owned by the pool owner
-          noLenderManager,
           //This prevents a broken pool to extract the pool nft
           poolPolicyId != poolDatum.commonData.principalAsset.policyId,
           quantity_of(
